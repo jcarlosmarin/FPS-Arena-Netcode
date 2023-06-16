@@ -6,6 +6,9 @@ using UnityEngine.SceneManagement;
 
 public class SceneHandler : NetworkBehaviour
 {
+    [SerializeField] Transform playerPrefab;
+    private bool initialSpawnDone = false;
+
     public void LoadGame()
     {
         if (!IsServer)
@@ -13,9 +16,24 @@ public class SceneHandler : NetworkBehaviour
 
         //Carregar cena pelo NetworkManager;
         NetworkManager.Singleton.SceneManager.LoadScene("GameScene", LoadSceneMode.Single);
+        NetworkManager.Singleton.SceneManager.OnLoadEventCompleted += SceneManager_OnLoadEventCompleted;
     }
-    public void LoadMenu()
+
+    private void SceneManager_OnLoadEventCompleted(string sceneName, LoadSceneMode loadSceneMode, List<ulong> clientsCompleted, List<ulong> clientsTimedOut)
     {
-        NetworkManager.Singleton.SceneManager.LoadScene("LobbyScene", LoadSceneMode.Single);
+        if (!initialSpawnDone && sceneName == "GameScene")
+        {
+            initialSpawnDone = true;
+            foreach (ulong id in NetworkManager.Singleton.ConnectedClientsIds)
+            {
+                //Instanciar o objeto player;
+                Transform playerTransform = Instantiate(playerPrefab);
+
+                //Usar a funcao de "SpawnAsPlayerObject" dentro do NetworkObject para conectar o player;
+                NetworkObject networkObject = playerTransform.GetComponent<NetworkObject>();
+
+                networkObject.SpawnAsPlayerObject(id, true);
+            }
+        }
     }
 }

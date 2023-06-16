@@ -14,8 +14,6 @@ public class SelectableHandler : MonoBehaviour
     {
         hostButton.onClick.AddListener(() =>
         {
-            NetworkManager.Singleton.StartHost();
-
             //Desabilitar botoes de Join, habilitar botao de Start;
             hostButton.interactable = false;
             clientButton.interactable = false;
@@ -23,8 +21,6 @@ public class SelectableHandler : MonoBehaviour
         });
         clientButton.onClick.AddListener(() =>
         {
-            NetworkManager.Singleton.StartClient();
-
             //Desabilitar botoes de Join;
             hostButton.interactable = false;
             clientButton.interactable = false;

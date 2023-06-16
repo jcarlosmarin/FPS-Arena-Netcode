@@ -17,6 +17,9 @@ public class PlayerMovement : NetworkBehaviour
     Vector3 moveDirection = Vector3.zero;
     float rotationX = 0;
 
+    SpawnHandler spawnHandler;
+    GameObject spawnPoint;
+
     [HideInInspector]
     public bool canMove = true;
 
@@ -25,7 +28,9 @@ public class PlayerMovement : NetworkBehaviour
         if (!IsOwner)
             return;
 
+        //Preencher variaveis de script
         characterController = GetComponent<CharacterController>();
+        spawnHandler = FindObjectOfType<SpawnHandler>();
 
         //Prender cursor;
         Cursor.lockState = CursorLockMode.Locked;
@@ -34,12 +39,6 @@ public class PlayerMovement : NetworkBehaviour
 
     void Update()
     {
-        //Despawnar players adicionais
-        if (gameObject.GetComponent<NetworkObject>().IsPlayerObject != true && IsServer && gameObject.GetComponent<NetworkObject>().IsSpawned)
-        {
-            gameObject.GetComponent<NetworkObject>().Despawn(false);
-        }
-
         if (!IsOwner)
             return;
 
@@ -77,5 +76,13 @@ public class PlayerMovement : NetworkBehaviour
             playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, 0);
             transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeed, 0);
         }
-    } 
+    }
+
+    public void Die()
+    {
+        if (!IsServer)
+            return;
+
+        this.GetComponent<NetworkObject>().Despawn();
+    }
 }

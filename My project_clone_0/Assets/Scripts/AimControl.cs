@@ -6,8 +6,6 @@ using Unity.Netcode;
 public class AimControl : NetworkBehaviour
 {
     [SerializeField] GameObject myCameraObject;
-
-    public GameObject objectHit;
     AudioListener myAudio;
     Camera myCamera;
     
@@ -17,20 +15,19 @@ public class AimControl : NetworkBehaviour
     
     public override void OnNetworkSpawn()
     {
-        //Find no objeto que finaliza o jogo
+        //Find no objeto que finaliza o jogo para usar seus objetos
         gameManager = FindObjectOfType<EndGame>();
 
+        //Habilita a camera e o audio localmente para o dono do personagem;
         if (!IsOwner)
             return;
 
-        //Habilita a camera e o audio localmente para o dono do personagem;
         myCamera = myCameraObject.GetComponent<Camera>();
         myCamera.enabled = true;
 
         myAudio = myCameraObject.GetComponent<AudioListener>();
         myAudio.enabled = true;
     }
-
 
     void Update()
     {
@@ -42,7 +39,7 @@ public class AimControl : NetworkBehaviour
         {
             if (reloading <= 0)
             {
-                //Dispara
+                //Disparar
                 Fire();
             }
             else
@@ -60,6 +57,10 @@ public class AimControl : NetworkBehaviour
 
     void Fire()
     {
+        //se o jogo ja tiver sido finalizado, o tiro deixa de funcionar
+        if (!gameManager.gameOn.Value)
+            return;
+
         //Esvazia a arma
         reloading = 1;
 
@@ -69,8 +70,8 @@ public class AimControl : NetworkBehaviour
         {
             if (hit.collider.CompareTag("Player"))
             {
+                hit.collider.gameObject.GetComponentInParent<PlayerMovement>().Die();
                 EndGameServerRpc();
-                hit.collider.gameObject.SetActive(false);
             }
         }
     }
@@ -87,9 +88,16 @@ public class AimControl : NetworkBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
-        gameManager.restartButton.gameObject.SetActive(true);
-        gameManager.quitButton.gameObject.SetActive(true);
+        //Botoes de reiniciar e sair para o host
+        if (IsServer)
+        {
+            gameManager.restartButton.gameObject.SetActive(true);
+            gameManager.quitButton.gameObject.SetActive(true);
 
+            gameManager.gameOn.Value = false;
+        }
+
+        //Telas de vitoria e derrota
         if (IsOwner)
         {
             gameManager.victoryText.SetActive(true);
